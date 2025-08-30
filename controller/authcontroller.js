@@ -5,9 +5,9 @@ import gentoken from "../utils/token.js"
 
 export const signUp = async (req, res) => {
     try {
-        const { fullname, email, password, mobile, role } = req.body
-        const user = await User.find({ email })
-        if (user) {
+        const {fullname,email,password,mobile, role } = req.body
+        let user = await User.findOne({ email })
+        if(user) {
             return res.status(400).json({ message: "User already exists." })
         }
         if (password.length < 6) {
