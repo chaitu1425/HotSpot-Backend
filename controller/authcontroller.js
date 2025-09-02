@@ -114,6 +114,12 @@ export const verifyOTP = async(req,res)=>{
 export const resetPassword = async(req,res)=>{
     try {
         const {email,newPass} = req.body
+        if(newPass.empty()){
+            return res.status(400).json({message:'Password required'})
+        }
+        if(newPass<6){
+            return res.status(400).json({message:'Password must be at least 6 char'})
+        }
         const user = await User.findOne({email})
         if(!user || !user.isOtpVerified){
            return res.status(400).json({message:'OTP Verifcation Required'})
@@ -126,5 +132,30 @@ export const resetPassword = async(req,res)=>{
     } catch (error) {
         return res.status(500).json(`Password Reset error ${error}`)
         
+    }
+}
+
+export const googleAuth = async(req,res)=>{
+    try{
+        const {fullname,email,mobile,role}=req.body
+        let user = await User.findOne({email})
+        if(!user){
+            user = await User.create({
+                fullname,
+                email,
+                mobile,
+                role
+            })
+        }
+        const token =await gentoken(user._id) 
+        res.cookie("token",token,{
+            secure:false,
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000,
+            httpOnly:true
+        })
+        return res.status(200).json(user)
+    }catch(error){
+        return res.status(500).json(`Google Signup error ${error}`)
     }
 }
