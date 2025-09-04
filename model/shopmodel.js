@@ -5,7 +5,7 @@ const shopSchema = new mongoose.Schema({
         required:true
     },
     image:{
-        tpe:String,
+        type:String,
         required:true
     },
     owner:{
@@ -32,5 +32,4 @@ const shopSchema = new mongoose.Schema({
 },{timestamps:true})
 
 const Shop = mongoose.model("Shop",shopSchema)
-
 export default Shop

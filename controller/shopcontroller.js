@@ -1,5 +1,5 @@
-import Shop from "../model/shopmodel"
-import uploadonCloudinary from "../utils/cloudinary"
+import Shop from "../model/shopmodel.js"
+import uploadonCloudinary from "../utils/cloudinary.js"
 
 export const createShop = async(req,res)=>{
     try {
