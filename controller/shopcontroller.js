@@ -6,6 +6,7 @@ export const createShop = async(req,res)=>{
         const {name,city,state,address} = req.body
         let image
         if(req.file){
+            console.log(req.file)
             image = await uploadonCloudinary(req.file.path)            
         }
         let shop = await Shop.findOne({owner:req.userId})
@@ -19,7 +20,7 @@ export const createShop = async(req,res)=>{
                 owner:req.userId
             })
         }else{
-            shop = await Shop.findByIdAndUpdate(shop._Id,{
+            shop = await Shop.findByIdAndUpdate(shop._id,{
                 name,
                 city,
                 state,
@@ -37,7 +38,7 @@ export const createShop = async(req,res)=>{
 
 export const getShop = async(req,res)=>{
     try {
-        const shop = await Shop.findById({owner:req.userId}).populate("owner items")
+        const shop = await Shop.findOne({owner:req.userId}).populate("owner items")
         if(!shop){
             return null;
         }
