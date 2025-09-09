@@ -17,7 +17,10 @@ export const addItems = async(req,res)=>{
         })
         shop.items.push(item._id)
         await shop.save()
-        await shop.populate("items owner")
+        await shop.populate("owner").populate({
+            path:"items",
+            options:{sort:{updatedAt:-1}}
+        })
         return res.status(201).json(shop)
 
     } catch (error) {
@@ -28,7 +31,7 @@ export const addItems = async(req,res)=>{
 
 export const editItem = async(req,res)=>{
     try{
-        const itemId = req.params.itemsId
+        const itemId = req.params.itemId
         const {name,category,foodType,price} = req.body
         let image;
         if(req.file){
@@ -38,8 +41,27 @@ export const editItem = async(req,res)=>{
         if(!item){
             return res.status(400).json({message:"item not found"})
         }
+        const shop = await Shop.findOne({owner:req.userId}).populate({
+            path:"items",
+            options:{sort:{updatedAt:-1}}
+        })
         return res.status(201).json(item)
     }catch(error){
         return res.status(500).json({message:`Edit item error ${error}`})
     }
 }
+
+
+export const GetItemByid = async(req,res)=>{
+    try {
+        const itemId = req.params.itemId
+        const item = await Item.findById(itemId)
+        if(!item){
+            return res.status(400).json({message:"item not found"})
+        }
+        return res.status(200).json(item)
+    } catch (error) {
+        return res.status(500).json({message:` item error ${error}`})
+    }
+}
+
