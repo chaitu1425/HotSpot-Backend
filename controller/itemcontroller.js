@@ -87,3 +87,24 @@ export const GetItemByid = async(req,res)=>{
     }
 }
 
+export const getItemByCity = async(req,res)=>{
+    try {
+        const {city} = req.params
+        if(!city){
+            return res.status(400).json({message:"city is required"})
+        }
+        const shop = await Shop.find({
+            city:{$regex : new RegExp(`^${city}$`,"i")}
+        }).populate('items')
+        if(!shop){
+            return res.status(400).json({message:"shop not found"})
+        }
+        const shopIds = shop.map((shop)=>shop._id)
+
+        const item = await Item.find({shop:{$in:shopIds}})
+        return res.status(200).json(item)
+    } catch (error) {
+        return res.status(500).json({message:`get item by city error ${error}`})
+
+    }
+}
