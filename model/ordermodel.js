@@ -25,7 +25,7 @@ const shopOrderSchema = new mongoose.Schema({
 const orderScheme = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Use"
+        ref: "User"
     },
     paymentMethod: {
         type: String,
