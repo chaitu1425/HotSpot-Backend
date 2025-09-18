@@ -70,10 +70,20 @@ export const getMyOrders = async (req, res) => {
                 .populate("user")
                 .populate("shopOrders.shopOrderItems.item", "name image price")
 
-            return res.status(200).json(orders)
+            const filterOrder = orders.map((order)=>({
+                _id:order._id,
+                paymentMethod:order.paymentMethod,
+                user:order.user,
+                shopOrders:order.shopOrders.find(o=>o.owner._id==req.userId),
+                createdAt:order.createdAt,
+                deliveryAddress:order.deliveryAddress
+
+            }))
+            return res.status(200).json(filterOrder)
         }
     } catch (error) {
         return res.status(500).json({ message: `get user orders error ${error}` })
     }
 }
+
 
