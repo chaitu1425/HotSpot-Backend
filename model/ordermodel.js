@@ -25,7 +25,7 @@ const shopOrderSchema = new mongoose.Schema({
     shopOrderItems:[shopOrderItemSchema],
     status:{
         type:String,
-        enumm:['pending','preparing','out for delivery','delivered'],
+        enumm:['pending','preparing','out for delivery','   '],
         default:'pending'
     }
 
