@@ -1,6 +1,6 @@
 import express from "express"
 import isAuth from "../middleware/isAuth.js"
-import { getDeliveryBoyAssignment, getMyOrders, placeorder, updateOrderStatus } from "../controller/ordercontroller.js"
+import { acceptOrder, getDeliveryBoyAssignment, getMyOrders, placeorder, updateOrderStatus } from "../controller/ordercontroller.js"
 
 
 const orderRouter = express.Router()
@@ -11,8 +11,6 @@ orderRouter.post('/update-status/:orderId/:shopId',isAuth,updateOrderStatus)
 
 orderRouter.get('/get-assignments',isAuth,getDeliveryBoyAssignment)
 
-
-
-
+orderRouter.get('/accept-order/:assignmentId',isAuth,acceptOrder)
 
 export default orderRouter
