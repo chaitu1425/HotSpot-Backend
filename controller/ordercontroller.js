@@ -94,14 +94,17 @@ export const updateOrderStatus = async(req,res)=>{
         const {orderId,shopId} = req.params
         const {status} = req.body
         const order = await Order.findById(orderId)
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
 
-        const shopOrder = order.shopOrders.find(o=>o.shop==shopId)
+        const shopOrder = order.shopOrders.find(o=>o.shop.equals(shopId))
         if(!shopOrder){
             return res.status(400).json({message:'shop order not found'})
         }
         shopOrder.status = status
         let deliveryBoysPayload = []
-        if(status==="out for delivery" || !shopOrder.assignment){
+        if(status==="out for delivery" && !shopOrder.assignment){
             const {longitude,latitude} = order.deliveryAddress
             const nearByDeliveryBoys = await User.find({
                 role:"deliveryboy",
@@ -129,7 +132,7 @@ export const updateOrderStatus = async(req,res)=>{
             const candidates = availableBoys.map(b=>b._id)
             if(candidates.length==0){
                 await order.save()
-                return res.json({message:'Order Status Updated but there is no available delivery boys'})
+                return res.status(202).json({message:'Order Status Updated but there is no available delivery boys'})
             }
 
             const deliveryAssignment = await DeliveryAssignment.create({
@@ -150,12 +153,12 @@ export const updateOrderStatus = async(req,res)=>{
                 mobile:b.mobile
             }))
         }
-
+        
         await order.save()
+        const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
         await order.populate("shopOrders.shop","name")
         await order.populate("shopOrders.assignedDeliveryBoy","fullname email mobile")
 
-        const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
 
         return res.status(200).json({
             shopOrder:updatedShopOrder,
@@ -168,4 +171,30 @@ export const updateOrderStatus = async(req,res)=>{
         return res.status(500).json({ message: `Update status orders error ${error}` })
     }
 }
+
+export const getDeliveryBoyAssignment = async(req,res)=>{
+    try {
+        const deliveryBoyId = req.userId
+        const assignments = await DeliveryAssignment.find({
+            broadcastedTo:deliveryBoyId,
+            status:"broadcasted"
+        })
+        .populate("order")
+        .populate("shop")
+
+        const formated = assignments.map(a=>({
+            assignmentId:a._id,
+            orderId:a.order_id,
+            shopName:a.shop.name,
+            deliveryAddress:a.order.deliveryAddress,
+            items:a.order.shopOrders.find(so=>so._id.equals(a.shopOrderId)).shopOrderItems || [],
+            subtotal:a.order.shopOrders.find(so=>so._id.equals(a.shopOrderId)).subtotal || []
+        }))
+
+        return res.status(200).json(formated)
+    } catch (error) {
+        return res.status(500).json({ message: `get delivery boy assignment error ${error}` })
+    }
+}
+
 
