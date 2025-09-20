@@ -72,6 +72,7 @@ export const getMyOrders = async (req, res) => {
                 .populate("shopOrders.shop", "name")
                 .populate("user")
                 .populate("shopOrders.shopOrderItems.item", "name image price")
+                .populate("shopOrders.assignedDeliveryBoy","fullname mobile")
 
             const filterOrder = orders.map((order)=>({
                 _id:order._id,
@@ -234,5 +235,54 @@ export const acceptOrder = async(req,res)=>{
         })
     } catch (error) {
         return res.status(500).json({ message: `accepte oder error ${error}` })
+    }
+}
+
+
+export const getCurrentOrder = async(req,res)=>{
+    try {
+        const assignment = await DeliveryAssignment.findOne({
+            assignedTo:req.userId,
+            status:"assigned"
+        })
+        .populate("shop","name")
+        .populate("assignedTo","fullname email moile location")
+        .populate({
+            path:"order",
+            populate:[{path:"user",select:"fullname email mobile location"}],
+            
+        })
+        if(!assignment){
+            return res.status(400).json({message:"assignment not found"})
+        }
+        if(!assignment.order){
+            return res.status(400).json({message:"order not found"})
+        }
+        const shopOrder = assignment.order.shopOrders.find(so=>String(so._id)==String(assignment.shopOrderId))
+        if(!shopOrder){
+            return res.status(400).json({message:"shop order not found"})
+        }
+        let deliveryBoylocation = {lat:null,lon:null}
+        if(assignment.assignedTo.location.coordinates.length==2){
+            deliveryBoylocation.lat= assignment.assignedTo.location.coordinates[1]
+            deliveryBoylocation.lon= assignment.assignedTo.location.coordinates[0]
+        }
+        let customerlocation = {lat:null,lon:null}
+        if(assignment.order.deliveryAddress){
+            customerlocation.lat = assignment.order.deliveryAddress.latitude
+            customerlocation.lon = assignment.order.deliveryAddress.longitude
+        }
+
+        return res.status(200).json({
+            _id:assignment.order._id,
+            user:assignment.order.user,
+            shopOrder,
+            deliveryAddress:assignment.order.deliveryAddress,
+            deliveryBoylocation,
+            customerlocation
+        })
+
+    } catch (error) {
+        return res.status(500).json({ message: `getCurrent oder error ${error}` }) 
     }
 }
