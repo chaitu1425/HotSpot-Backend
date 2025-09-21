@@ -2,6 +2,7 @@ import DeliveryAssignment from '../model/deliveryAssignmentModel.js'
 import Order from '../model/ordermodel.js'
 import Shop from '../model/shopmodel.js'
 import User from '../model/usermodel.js'
+import { sendDeliveryOTP } from '../utils/mail.js'
 
 export const placeorder = async (req, res) => {
     try {
@@ -311,6 +312,56 @@ export const getOrderById = async(req,res)=>{
         }
         return res.status(200).json(order)
     } catch (error) {
-        return res.status(500).json({ message: `get oder by id error ${error}` }) 
+        return res.status(500).json({ message: `get oder by id error ${error}` })
     }    
+}
+
+export const sendDeliveryOtp = async(req,res)=>{
+    try {
+        const {orderId,shopOrderId} = req.body
+        const order = await Order.findById(orderId)
+        .populate("user")
+        const shopOrder = order.shopOrders.id(shopOrderId)
+        if(!order || !shopOrder ){
+            return res.status(400).json({message:'enter valid order/shopOrderId'})
+        }
+        const otp = Math.floor(100000+Math.random()*900000).toString()
+        shopOrder.deliveryOtp=otp
+        shopOrder.otpExpires=Date.now()+ 5*60*1000
+        await order.save()
+        await sendDeliveryOTP(order.user,otp)
+        return res.status(200).json({message:`OTP sent successfully to ${order.user?.fullname}`})
+    } catch (error) {
+        return res.status(500).json({ message: `send delivery otp error ${error}` })
+        
+    }
+}
+
+export const verifyDeliveryOTP = async(req,res)=>{
+    try {
+        const {orderId,shopOrderId,otp} = req.body
+        const order = await Order.findById(orderId)
+        .populate("user")
+        const shopOrder = order.shopOrders.id(shopOrderId)
+        if(!order || !shopOrder ){
+            return res.status(400).json({message:'enter valid order/shopOrderId'})
+        }
+        if(shopOrder.deliveryOtp!==otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
+            return res.status(400).json({message:'Invalid/Expired OTP'}) 
+        }
+
+        shopOrder.status="delivered"
+        shopOrder.deliveredAt=Date.now()
+        await order.save()
+
+        await DeliveryAssignment.deleteOne({
+            shopOrderId:shopOrder._id,
+            order:orderId,
+            assignedTo:shopOrder.assignedDeliveryBoy
+        })
+        return res.status(200).json({message:"Order Delivered Successfully!"})
+        
+    } catch (error) {
+        return res.status(500).json({ message: `verify delivery otp error ${error}` })
+    }
 }
