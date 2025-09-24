@@ -3,6 +3,14 @@ import Order from '../model/ordermodel.js'
 import Shop from '../model/shopmodel.js'
 import User from '../model/usermodel.js'
 import { sendDeliveryOTP } from '../utils/mail.js'
+import Razorpay from 'razorpay'
+import dotenv from 'dotenv'
+dotenv.config()
+
+let instance = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY,
+        key_secret: process.env.RAZORPAY_SECRET,
+});
 
 export const placeorder = async (req, res) => {
     try {
@@ -41,6 +49,27 @@ export const placeorder = async (req, res) => {
                 }))
             }
         }))
+        if(paymentMethod=="online"){
+            const razorpayOrder =await instance.orders.create({
+                amount:Math.round(totalAmount*100),
+                currency:'INR',
+                receipt:`receipt_${Date.now()}`
+            })
+
+            const newOrder = await Order.create({
+                user: req.userId,
+                paymentMethod,
+                deliveryAddress,
+                totalAmount,
+                shopOrders,
+                razorpayOrderId:razorpayOrder.id,
+                payment:false
+            })
+            return res.status(200).json({
+                razorpayOrder,
+                orderId:newOrder._id
+            })
+        }
         const newOrder = await Order.create({
             user: req.userId,
             paymentMethod,
@@ -49,12 +78,36 @@ export const placeorder = async (req, res) => {
             shopOrders
         })
         await newOrder.populate("shopOrders.shopOrderItems.item","name image price")
-
+        await newOrder.populate("shopOrders.shop","name")
         return res.status(201).json(newOrder)
     } catch (error) {
         return res.status(500).json({ message: `place order error ${error}` })
     }
 }
+
+export const verifyPayment = async(req,res)=>{
+    try {
+        const {razorpay_payment_id,orderId} = req.body
+        const payment = await instance.payments.fetch(razorpay_payment_id)
+        if(!payment || payment.status!="captured"){
+            return res.status(400).json({message:"payment not captured"})            
+        }
+        const order = await Order.findById(orderId)
+        if(!order){
+            return res.status(400).json({message:"order not found"})            
+        }
+
+        order.payment=true
+        order.razorpayPaymentId=razorpay_payment_id
+        await order.save()
+        await order.populate("shopOrders.shopOrderItems.item","name image price")
+        await order.populate("shopOrders.shop","name")
+        return res.status(200).json(order)
+    } catch (error) {
+        return res.status(500).json({ message: `verify payment order error ${error}` })
+    }
+}
+
 
 export const getMyOrders = async (req, res) => {
     try {
@@ -81,7 +134,8 @@ export const getMyOrders = async (req, res) => {
                 user:order.user,
                 shopOrders:order.shopOrders.find(o=>o.owner._id==req.userId),
                 createdAt:order.createdAt,
-                deliveryAddress:order.deliveryAddress
+                deliveryAddress:order.deliveryAddress,
+                payment:order.payment
 
             }))
             return res.status(200).json(filterOrder)

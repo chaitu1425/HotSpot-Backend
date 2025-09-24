@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import { type } from "os";
+import { stringify } from "querystring";
+import { deflate } from "zlib";
 
 const shopOrderItemSchema = new mongoose.Schema({
     item:{
@@ -58,7 +60,7 @@ const orderScheme = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['cod', 'online'],
+        enum: ['cod',"online"],
         required: true
     },
     deliveryAddress: {
@@ -69,7 +71,20 @@ const orderScheme = new mongoose.Schema({
     totalAmount: {
         type: Number
     },
-    shopOrders: [shopOrderSchema]
+    shopOrders: [shopOrderSchema],
+    payment:{
+        type:Boolean,
+        default:false
+    },
+    razorpayOrderId:{
+        type:String,
+        default:""
+    },
+    razorpayPaymentId:{
+        type:String,
+        default:""
+    }
+
 
 }, { timestamps: true })
 
