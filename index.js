@@ -37,9 +37,6 @@ app.use("/api/shop",shopRouter)
 app.use("/api/item",itemRouter)
 app.use("/api/order",orderRouter)
 soketHandle(io)
-app.get("/",(req,res)=>{
-    res.send("Hello")
-})
 
 server.listen(8000,()=>{   
     console.log(`Server is running in ${port}`)
