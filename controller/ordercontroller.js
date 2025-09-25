@@ -121,7 +121,7 @@ export const verifyPayment = async (req, res) => {
         order.payment = true
         order.razorpayPaymentId = razorpay_payment_id
         await order.save()
-        
+
         await order.populate("shopOrders.shopOrderItems.item", "name image price")
         await order.populate("shopOrders.shop","name")
         await order.populate("shopOrders.owner","name socketId")
@@ -256,7 +256,21 @@ export const updateOrderStatus = async (req, res) => {
         const updatedShopOrder = order.shopOrders.find(o => o.shop == shopId)
         await order.populate("shopOrders.shop", "name")
         await order.populate("shopOrders.assignedDeliveryBoy", "fullname email mobile")
+        await order.populate("user", "socketId")
 
+
+        const io = req.app.get('io')
+        if(io){
+            const userSocketid = order.user.socketId
+            if(userSocketid){
+                io.to(userSocketid).emit('update-status',{
+                    orderId:order._id,
+                    shopId:updatedShopOrder.shop._id,
+                    status:updatedShopOrder.status,
+                    userId:order.user._id
+                })
+            }
+        }
 
         return res.status(200).json({
             shopOrder: updatedShopOrder,
