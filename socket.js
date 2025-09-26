@@ -12,6 +12,27 @@ export const soketHandle =(io)=>{
                 console.log(error)
             }    
         })
+        socket.on('update-location',async({latitude,longitude,userId})=>{
+            try {
+                const user = await User.findByIdAndUpdate(userId,{
+                    location:{
+                        type:'Point',
+                        coordinates:[longitude,latitude]
+                    },
+                    isOnline:true,
+                    socketId:socket.id
+                })
+                if(user)
+                io.emit('updatedeliverylocation',{
+                    deliveryBoyId:userId,
+                    latitude,
+                    longitude 
+                })
+            } catch (error) {
+                console.log('update delivery location error')
+            }
+        })
+
         socket.on('disconnect',async()=>{
             try{
                 await User.findOneAndUpdate({socketId:socket.id},{
