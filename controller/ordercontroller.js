@@ -79,14 +79,14 @@ export const placeorder = async (req, res) => {
         })
         await newOrder.populate("shopOrders.shopOrderItems.item", "name image price")
         await newOrder.populate("shopOrders.shop", "name")
-        await newOrder.populate("shopOrders.owner","name socketId")
-        await newOrder.populate("user","name email mobile")
+        await newOrder.populate("shopOrders.owner", "name socketId")
+        await newOrder.populate("user", "name email mobile")
 
         const io = req.app.get('io')
-        if(io){
+        if (io) {
             newOrder.shopOrders.forEach(shopOrder => {
                 const ownerSocketId = shopOrder.owner.socketId
-                if (ownerSocketId){
+                if (ownerSocketId) {
                     io.to(ownerSocketId).emit('newOrder', {
                         _id: newOrder._id,
                         paymentMethod: newOrder.paymentMethod,
@@ -123,15 +123,15 @@ export const verifyPayment = async (req, res) => {
         await order.save()
 
         await order.populate("shopOrders.shopOrderItems.item", "name image price")
-        await order.populate("shopOrders.shop","name")
-        await order.populate("shopOrders.owner","name socketId")
-        await order.populate("user","name email mobile")
+        await order.populate("shopOrders.shop", "name")
+        await order.populate("shopOrders.owner", "name socketId")
+        await order.populate("user", "name email mobile")
 
         const io = req.app.get('io')
-        if(io){
+        if (io) {
             order.shopOrders.forEach(shopOrder => {
                 const ownerSocketId = shopOrder.owner.socketId
-                if(ownerSocketId){
+                if (ownerSocketId) {
                     io.to(ownerSocketId).emit('newOrder', {
                         _id: order._id,
                         paymentMethod: order.paymentMethod,
@@ -250,6 +250,26 @@ export const updateOrderStatus = async (req, res) => {
                 latitude: b.location.coordinates[1],
                 mobile: b.mobile
             }))
+            await deliveryAssignment.populate("order")
+            await deliveryAssignment.populate("shop")
+            const io = req.app.get('io')
+            if (io) {
+                availableBoys.forEach(dboy => {
+                    const dboySocketId = dboy.socketId
+                    if (dboySocketId) {
+                        io.to(dboySocketId).emit('newAssignment', {
+                            sendTo:dboy._id,
+                            assignmentId: deliveryAssignment._id,
+                            orderId: deliveryAssignment.order_id,
+                            shopName: deliveryAssignment.shop.name,
+                            deliveryAddress: deliveryAssignment.order.deliveryAddress,
+                            items: deliveryAssignment.order.shopOrders.find(so => so._id.equals(deliveryAssignment.shopOrderId)).shopOrderItems || [],
+                            subtotal: deliveryAssignment.order.shopOrders.find(so => so._id.equals(deliveryAssignment.shopOrderId)).subtotal
+                        })
+                    }
+                });
+            }
+
         }
 
         await order.save()
@@ -260,14 +280,14 @@ export const updateOrderStatus = async (req, res) => {
 
 
         const io = req.app.get('io')
-        if(io){
+        if (io) {
             const userSocketid = order.user.socketId
-            if(userSocketid){
-                io.to(userSocketid).emit('update-status',{
-                    orderId:order._id,
-                    shopId:updatedShopOrder.shop._id,
-                    status:updatedShopOrder.status,
-                    userId:order.user._id
+            if (userSocketid) {
+                io.to(userSocketid).emit('update-status', {
+                    orderId: order._id,
+                    shopId: updatedShopOrder.shop._id,
+                    status: updatedShopOrder.status,
+                    userId: order.user._id
                 })
             }
         }
