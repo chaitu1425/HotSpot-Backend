@@ -1,3 +1,4 @@
+import Item from "../model/itemsModel.js"
 import User from "../model/usermodel.js"
 
 export const getCurrentUser = async(req,res)=>{
@@ -32,4 +33,25 @@ export const updateUserLocation = async(req,res)=>{
     } catch (error) {
         return res.status(500).json({message:`update location error ${error}`})
     }
-} 
+}
+
+export const rating = async(req,res)=>{
+    try {
+        const {rating,itemId} = req.body
+        if(!itemId || !rating)return res.status(400).json({message:'item id and rating required'})
+        if(rating<1 || rating >5)return res.status(400).json({message:'invalid rating'})
+        
+        const item = await Item.findById(itemId)
+        if(!item){
+            return res.status(400).json({message:'Item not found'})
+        }
+        const newCount = item.rating.count+1;
+        const newavg = (item.rating.average*item.rating.count+rating)/newCount;
+        item.rating.count=newCount
+        item.rating.average=newavg
+        await item.save()
+        return res.status(200).json({rating:item.rating})
+    } catch (error) {
+        return res.status(500).json({message:`rating error ${error}`})
+    }
+}

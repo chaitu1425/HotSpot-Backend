@@ -21,13 +21,14 @@ export const soketHandle =(io)=>{
                     },
                     isOnline:true,
                     socketId:socket.id
-                })
-                if(user)
-                io.emit('updatedeliverylocation',{
-                    deliveryBoyId:userId,
-                    latitude,
-                    longitude 
-                })
+                },{new:true})
+                if(user){
+                    io.emit('updatedeliverylocation',{
+                        deliveryBoyId:userId,
+                        latitude,
+                        longitude
+                    })
+                }
             } catch (error) {
                 console.log('update delivery location error')
             }
