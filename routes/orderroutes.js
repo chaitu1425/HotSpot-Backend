@@ -20,6 +20,6 @@ orderRouter.get('/get-order-by-id/:orderId',isAuth,getOrderById)
 orderRouter.post('/send-delivery-otp',isAuth,sendDeliveryOtp)
 orderRouter.post('/verify-delivery-otp',isAuth,verifyDeliveryOTP)
 
-orderRouter.get('/get-today-deliveries',isAuth,getTodaydeliveries)
+// orderRouter.get('/get-today-deliveries',isAuth,getTodaydeliveries)
 
 export default orderRouter
