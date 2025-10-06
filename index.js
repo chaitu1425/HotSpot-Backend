@@ -38,7 +38,7 @@ app.use("/api/item",itemRouter)
 app.use("/api/order",orderRouter)
 soketHandle(io)
 
-server.listen(8000,()=>{   
+server.listen(port,()=>{   
     console.log(`Server is running in ${port}`)
     dbconnect()
 })
