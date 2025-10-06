@@ -20,8 +20,10 @@ const io = new Server(server,{
     cors:{
     origin:"https://hotspot-frontend-3qy7.onrender.com",
     credentials:true,   
-    methods:['POST','GET']
-    }
+    methods:["POST","GET"]
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000,
 })
 app.set("io",io)
 
