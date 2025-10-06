@@ -19,7 +19,7 @@ const server = http.createServer(app)
 const io = new Server(server,{
     cors:{
     origin:"https://hotspot-frontend-3qy7.onrender.com",
-    credentials:true,
+    credentials:true,   
     methods:['POST','GET']
     }
 })
