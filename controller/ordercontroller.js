@@ -449,8 +449,7 @@ export const getOrderById = async (req, res) => {
 export const sendDeliveryOtp = async (req, res) => {
     try {
         const { orderId, shopOrderId } = req.body
-        const order = await Order.findById(orderId)
-            .populate("user")
+        const order = await Order.findById(orderId).populate("user")
         const shopOrder = order.shopOrders.id(shopOrderId)
         if (!order || !shopOrder) {
             return res.status(400).json({ message: 'enter valid order/shopOrderId' })
