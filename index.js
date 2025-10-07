@@ -21,7 +21,9 @@ const io = new Server(server,{
     origin:"https://hotspot-frontend-3qy7.onrender.com",
     credentials:true,   
     methods:["POST","GET"]
-    }
+    },
+    transports: ["polling", "websocket"],
+    allowEIO3: true,
 })
 app.set("io",io)
 
