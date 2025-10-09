@@ -458,7 +458,7 @@ export const sendDeliveryOtp = async (req, res) => {
         shopOrder.deliveryOtp = otp
         shopOrder.otpExpires = Date.now() + 5 * 60 * 1000
         await order.save()
-        await sendDeliveryOTP(order.user, otp)
+        await sendDeliveryOTP(order.user,otp)
         return res.status(200).json({ message: `OTP sent successfully to ${order.user?.fullname}` })
     } catch (error) {
         return res.status(500).json({ message: `send delivery otp error ${error}` })
@@ -488,7 +488,6 @@ export const verifyDeliveryOTP = async (req, res) => {
             assignedTo: shopOrder.assignedDeliveryBoy
         })
         return res.status(200).json({ message: "Order Delivered Successfully!" })
-
     } catch (error) {
         return res.status(500).json({ message: `verify delivery otp error ${error}` })
     }
@@ -499,7 +498,6 @@ export const getTodaydeliveries = async(req,res)=>{
         const delivereryboyId = req.userId
         const startsofDay = new Date()
         startsofDay.setHours(0,0,0,0)
-
         const orders = await Order.find({
             "shopOrders.assignedDeliveryBoy":delivereryboyId,
             "shopOrders.status":"delivered",
@@ -522,12 +520,10 @@ export const getTodaydeliveries = async(req,res)=>{
             const hour = new Date(shopOrder.deliveredAt).getHours()
             stats[hour]=(stats[hour] || 0)+1
         })
-
         let formatedStats = Object.keys(stats).map(hour=>({
             hour:parseInt(hour),
             count:stats[hour]
         }))
-
         formatedStats.sort((a,b)=>a.hour-b.hour)
         return res.status(200).json(formatedStats)
     } catch (error) {
