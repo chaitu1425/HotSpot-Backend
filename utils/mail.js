@@ -31,7 +31,7 @@ export const SendOTPMail = async (to, otp) => {
   console.log(`OTP email sent to ${to}: ${info.messageId}`);
   return info;
   }catch(err){
-    console.error('SendOTPMail error:', error);
+    console.error('SendOTPMail error:', err);
     throw err;
   } 
 }
